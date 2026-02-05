@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Esto forzará un fondo oscuro mientras carga Tailwind */
+body {
+  background-color: #0f172a;
+  color: white;
+  font-family: monospace;
+}
