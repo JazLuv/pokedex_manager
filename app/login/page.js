@@ -23,7 +23,7 @@ function LoginContent() {
     try {
       const res = await axios.post('/api/auth/login', { username, password });
       localStorage.setItem('token', res.data.token);
-      router.push('/dashboard');
+      router.push('/'); // Redirige a la página principal después del login
     } catch (err) {
       setError(err.response?.data?.error || 'Error de acceso');
     } finally {

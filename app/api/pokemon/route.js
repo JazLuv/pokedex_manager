@@ -1,9 +1,13 @@
 import { getDb } from '@/lib/db';
-import { fetchFirstGen } from '@/lib/pokeApi';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
-// Función auxiliar para obtener el usuario del token
+// --- 🔥 CACHÉ EN MEMORIA 🔥 ---
+// Al declarar esta variable FUERA de la función, se mantiene viva
+// mientras el servidor esté encendido.
+let cachedGen1Data = null;
+
 async function getUserIdFromRequest(request) {
   const token = request.headers.get('authorization')?.split(' ')[1];
   if (!token) return null;
@@ -15,42 +19,69 @@ async function getUserIdFromRequest(request) {
   }
 }
 
-// GET: Lista de 151 Pokémon + Estado de captura
 export async function GET(request) {
   const userId = await getUserIdFromRequest(request);
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   try {
     const db = await getDb();
-    const basePokemon = await fetchFirstGen(); // Trae nombre y url de la PokéAPI
 
-    // Consultamos la colección del usuario en SQLite
+    // 1. VERIFICAMOS SI YA TENEMOS LOS DATOS EN CACHÉ
+    let baseData;
+
+    if (cachedGen1Data) {
+      console.log("⚡ Usando datos de Caché (Rápido)");
+      baseData = cachedGen1Data;
+    } else {
+      console.log("🐢 Caché vacía. Descargando de PokéAPI... (Lento)");
+      
+      // A. Pedimos la lista
+      const listResponse = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=151');
+      const baseList = listResponse.data.results;
+
+      // B. Pedimos los detalles en paralelo
+      const detailPromises = baseList.map(p => axios.get(p.url));
+      const detailsResponses = await Promise.all(detailPromises);
+
+      // C. Formateamos y GUARDAMOS EN CACHÉ
+      cachedGen1Data = detailsResponses.map((response) => {
+        const apiData = response.data;
+        return {
+          id: apiData.id,
+          name: apiData.name,
+          image: apiData.sprites.front_default,
+          types: apiData.types.map(t => t.type.name),
+        };
+      });
+
+      baseData = cachedGen1Data;
+    }
+
+    // 2. Consultamos la base de datos local (Esto SIEMPRE se hace fresco)
+    // Porque las capturas cambian usuario por usuario.
     const userRows = await db.all(
       'SELECT pokemon_id, is_team FROM collection WHERE user_id = ?',
       [userId]
     );
 
-    // Cruzamos los datos
-    const fullCollection = basePokemon.map((p, index) => {
-      const id = index + 1;
-      const captureData = userRows.find(row => row.pokemon_id === id);
-      
+    // 3. Cruzamos Caché con DB Local
+    const fullCollection = baseData.map((pokemon) => {
+      const captureData = userRows.find(row => row.pokemon_id === pokemon.id);
       return {
-        id,
-        name: p.name,
-        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
-        captured: !!captureData,
-        is_team: captureData ? !!captureData.is_team : false
+        ...pokemon, // Usamos los datos estáticos (nombre, tipo, img)
+        captured: !!captureData, // Datos dinámicos (capturado o no)
+        is_team: captureData ? !!captureData.is_team : false,
       };
     });
 
     return NextResponse.json(fullCollection);
   } catch (error) {
-    return NextResponse.json({ error: "Error al cargar la Pokedex" }, { status: 500 });
+    console.error("Error:", error);
+    return NextResponse.json({ error: "Error al cargar datos" }, { status: 500 });
   }
 }
 
-// POST: Capturar un Pokémon
+// ... (POST y DELETE se mantienen igual) ...
 export async function POST(request) {
   const userId = await getUserIdFromRequest(request);
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -76,10 +107,7 @@ export async function DELETE(request) {
     if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Log para depuración profesional
     const body = await request.json();
-    console.log("Intentando liberar Pokémon:", body.pokemonId, "para usuario:", decoded.id);
 
     if (!body.pokemonId) {
       return NextResponse.json({ error: 'Falta el ID del Pokémon' }, { status: 400 });
@@ -87,7 +115,6 @@ export async function DELETE(request) {
 
     const db = await getDb();
     
-    // Ejecutamos la eliminación en la tabla de colección
     const result = await db.run(
       'DELETE FROM collection WHERE user_id = ? AND pokemon_id = ?',
       [decoded.id, body.pokemonId]
@@ -99,7 +126,7 @@ export async function DELETE(request) {
 
     return NextResponse.json({ message: 'Pokémon liberado con éxito' });
   } catch (error) {
-    console.error("DETALLE DEL ERROR EN DELETE:", error); // Esto saldrá en tu terminal
+    console.error("DETALLE DEL ERROR EN DELETE:", error);
     return NextResponse.json({ 
       error: 'Error interno al liberar', 
       details: error.message 
