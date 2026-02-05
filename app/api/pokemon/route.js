@@ -51,6 +51,8 @@ export async function GET(request) {
           name: apiData.name,
           image: apiData.sprites.front_default,
           types: apiData.types.map(t => t.type.name),
+          weight: apiData.weight, // Viene en hectogramos
+          height: apiData.height, // Viene en decímetros
         };
       });
 

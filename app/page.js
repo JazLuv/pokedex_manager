@@ -296,25 +296,45 @@ export default function Home() {
         </div>
 
         {/* --- PANEL DE CONTROL --- */}
-        <div className="mt-6 flex justify-between items-center px-4 bg-black/20 p-4 rounded-2xl border-t-2 border-black/10">
-           {/* Pad Decorativo */}
-           <div className="w-16 h-16 bg-slate-900 rounded-full border-4 border-slate-800 relative shadow-inner">
+        <div className="mt-6 flex justify-between items-center px-4 bg-black/20 p-4 rounded-2xl border-t-2 border-black/10 gap-4">
+           
+           {/* 1. Pad Decorativo (Izquierda) */}
+           <div className="shrink-0 w-16 h-16 bg-slate-900 rounded-full border-4 border-slate-800 relative shadow-inner">
               <div className="absolute top-1/2 left-0 w-full h-2 bg-slate-800 -translate-y-1/2"></div>
               <div className="absolute left-1/2 top-0 h-full w-2 bg-slate-800 -translate-x-1/2"></div>
            </div>
 
-           {/* Botones de Acción */}
-           <div className="flex flex-col gap-2 w-56">
+           {/* 2. 🔥 NUEVA PANTALLA DE DATOS (Centro) 🔥 */}
+           <div className="flex-1 bg-green-900/30 border-2 border-green-800/50 rounded h-16 flex items-center justify-center relative overflow-hidden">
+              {/* Scanlines decorativas */}
+              <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
+              
+              {selectedId && selectedPokemon ? (
+                <div className="grid grid-cols-2 gap-x-6 text-green-400 font-mono text-xs z-10">
+                   <div className="flex flex-col items-center">
+                      <span className="text-[8px] text-green-600 uppercase">HEIGHT</span>
+                      <span>{selectedPokemon.height / 10} m</span>
+                   </div>
+                   <div className="flex flex-col items-center">
+                      <span className="text-[8px] text-green-600 uppercase">WEIGHT</span>
+                      <span>{selectedPokemon.weight / 10} kg</span>
+                   </div>
+                </div>
+              ) : (
+                <p className="text-green-800 text-[10px] font-mono animate-pulse">NO_DATA</p>
+              )}
+           </div>
+
+           {/* 3. Botones de Acción (Derecha) */}
+           <div className="flex flex-col gap-2 w-48 shrink-0">
              {selectedId ? (
                 isAuthenticated ? (
-                  // ... Botones Reales ...
                   selectedPokemon?.captured ? (
                     <button onClick={() => handleRelease(selectedId)} className="w-full py-2 rounded bg-red-800 text-white text-[10px] font-bold border-b-4 border-red-950 active:border-b-0 uppercase hover:bg-red-700 transition-all">LIBERAR_ESPECIMEN</button>
                   ) : (
                     <button onClick={() => handleCapture(selectedId)} className="w-full py-2 rounded bg-purple-700 text-white text-[10px] font-bold border-b-4 border-purple-900 active:border-b-0 uppercase hover:bg-purple-600 transition-all">REGISTRAR_DATOS</button>
                   )
                 ) : (
-                  // Placeholder invitado
                   <div className="bg-zinc-800 h-8 rounded animate-pulse"></div> 
                 )
              ) : (

@@ -1,6 +1,6 @@
 {
   "/api/auth/login/route": "app/api/auth/login/route.js",
   "/api/pokemon/route": "app/api/pokemon/route.js",
-  "/page": "app/page.js",
-  "/login/page": "app/login/page.js"
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js"
 }
