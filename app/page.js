@@ -25,9 +25,9 @@ export default function Home() {
   const [mobileTab, setMobileTab] = useState('right'); 
   const [username, setUsername] = useState('');
 
-  // AI
-  const [aiResult, setAiResult] = useState(null); // Para guardar el resultado de la IA
-  const [aiImagePreview, setAiImagePreview] = useState(null); // Para ver la foto subida
+  // AI constants
+  const [aiResult, setAiResult] = useState(null); 
+  const [aiImagePreview, setAiImagePreview] = useState(null); 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const selectedPokemon = pokemons.find(p => p.id === selectedId);
@@ -315,7 +315,7 @@ export default function Home() {
                {!isAnalyzing && !aiResult && (
                   <>
                      <p className="text-green-500 text-xs text-center px-4 mb-4">
-                        {aiImagePreview ? "IMAGEN LISTA PARA ANÁLISIS" : "LISTO PARA IDENTIFICAR POKEMON EN FOTO"}
+                        {aiImagePreview ? "IMAGEN LISTA PARA ANÁLISIS" : "IDENTIFICAR POKEMON DE REGIÓN KANTO EN FOTO"}
                      </p>
                      
                      <input 
