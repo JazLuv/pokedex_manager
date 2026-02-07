@@ -3,27 +3,31 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { getTypeColor } from '@/lib/pokeApi'; 
+import { jwtDecode } from 'jwt-decode';
+
+// Main pokedex manager component with original style design
+// Handles authentication via JWT, pokemon catalog management with search-filter capabilities,
+// capture/release system, and team building
+// Responsive for desktop and mobile with tab switching
 
 export default function Home() {
-  // --- ESTADOS GLOBALES ---
+  // Here the states constants will be defined for global pokemon data, state, user,
+  // authentification, filter, search and user interface
   const [pokemons, setPokemons] = useState([]);
   const [filteredPokemons, setFilteredPokemons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // --- ESTADOS DE FILTRO Y BÚSQUEDA ---
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCaught, setFilterCaught] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
-
-  // --- NUEVOS ESTADOS (EQUIPO Y UI) ---
   const [myTeam, setMyTeam] = useState([]); 
   const [mobileTab, setMobileTab] = useState('right'); 
-
   const selectedPokemon = pokemons.find(p => p.id === selectedId);
+  const [username, setUsername] = useState('');
 
-  // --- FUNCIONES LOGICAS (Sin cambios) ---
+  // Captures a pokemon by sending POST request to API with JWT token,
+  // then updates local state to mark it as captured
   const handleCapture = async (pokemonId) => {
     if (!isAuthenticated) return;
     try {
@@ -32,10 +36,12 @@ export default function Home() {
       const updateList = (list) => list.map(p => p.id === pokemonId ? { ...p, captured: true } : p);
       setPokemons(prev => updateList(prev));
     } catch (error) {
-      alert("ERROR_CAPTURA: " + (error.response?.data?.error || "Offline"));
+      alert("ERROR DE CAPTURA: " + (error.response?.data?.error || "OFFLINE"));
     }
   };
 
+  // Releases a pokemon by sending DELETE request to API, marks it as not captured,
+  // removes from team if present, and updates local state accordingly
   const handleRelease = async (pokemonId) => {
     if (!isAuthenticated) return;
     try {
@@ -45,10 +51,12 @@ export default function Home() {
       setPokemons(prev => updateList(prev));
       setMyTeam(prev => prev.filter(p => p.id !== pokemonId));
     } catch (error) {
-      alert("ERROR_LIBERACIÓN: " + (error.response?.data?.error || "Offline"));
+      alert("ERROR DE LIBERACIÓN: " + (error.response?.data?.error || "OFFLINE"));
     }
   };
 
+  // Clears JWT token from localStorage, resets all state to defaults,
+  // and loads placeholder pokemon data for unauthenticated view
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
@@ -64,6 +72,8 @@ export default function Home() {
     setFilteredPokemons(placeholders);
   };
 
+  // Adds or removes pokemon from the user's team with validation:
+  // requires authentication, only captured Pokémon allowed, maximum 6 pokemon
   const toggleTeamMember = (pokemon) => {
     if (!isAuthenticated) return;
     const isInTeam = myTeam.find(p => p.id === pokemon.id);
@@ -71,14 +81,32 @@ export default function Home() {
       setMyTeam(prev => prev.filter(p => p.id !== pokemon.id));
     } else {
       if (myTeam.length >= 6) {
-        alert("EQUIPO LLENO: Máximo 6 Pokémon.");
+        alert("EQUIPO LLENO: MÁXIMO 6 POKEMON.");
         return;
       }
       setMyTeam(prev => [...prev, pokemon]);
     }
   };
 
-  // --- EFFECTS ---
+   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      setUsername('');
+      return;
+    }
+    try {
+      const decoded = jwtDecode(token);
+      setUsername(decoded.username || decoded.user || 'ENTRENADOR');
+    } catch (error) {
+      console.error('Error decodificando token:', error);
+      setUsername('ENTRENADOR');
+    }
+  },
+  ),
+
+  // Applies search and filters to pokemon list whenever searchTerm, filterCaught, selectedType, or pokemons changes
+  // Filters by name/number, capture status, and type, then updates filteredPokemons state.
   useEffect(() => {
     let result = pokemons;
     if (searchTerm) {
@@ -90,6 +118,8 @@ export default function Home() {
     setFilteredPokemons(result);
   }, [searchTerm, filterCaught, selectedType, pokemons]);
 
+  // Loads pokedex data on mount by checking for JWT token, if missing, loads placeholder data for unauthorized view,
+  // if present, fetches user's pokedex from API
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -124,50 +154,46 @@ export default function Home() {
   const capturedCount = pokemons.filter(p => p.captured).length;
   const isInTeam = selectedPokemon && myTeam.some(p => p.id === selectedPokemon.id);
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center font-mono text-cyan-500 animate-pulse">INIT_SYS...</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center font-mono text-cyan-500 animate-pulse">¿LISTO PARA ATRAPARLOS A TODOS {username || 'ENTRENADOR'}?</div>;
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-2 md:p-4 transition-colors duration-700 font-mono ${isAuthenticated ? 'bg-slate-900' : 'bg-zinc-800'}`}>
       
-      {/* --- OVERLAY LOGIN --- */}
+      {/* Overlay for the login */}
       {!isAuthenticated && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-          <h1 className="text-4xl font-black text-white mb-8 tracking-tighter">POKEDEX_KANTO_OS</h1>
-          <Link href="/login" className="bg-green-500 hover:bg-green-400 text-black px-12 py-6 rounded font-bold text-2xl shadow-[0_0_30px_rgba(34,197,94,0.6)] animate-pulse border-4 border-green-700">
-            INSERTAR CARTUCHO (LOGIN)
+          <h1 className="text-4xl font-black text-white mb-8 tracking-tighter">POKÉDEX MANAGER DE {username || 'ENTRENADOR'}</h1>
+          <Link href="/login" className="bg-green-500 hover:bg-green-400 text-black px-12 py-6 rounded font-bold text-2xl shadow-[0_0_30px_rgba(34,197,94,0.6)]">
+            IDENTIFÍCATE ENTRENADOR (LOGIN)
           </Link>
         </div>
       )}
 
-      {/* --- HEADER PRINCIPAL (EXTERNO AL CASE) --- */}
-      {/* Aquí colocamos el botón de LOGOUT para máxima visibilidad en desktop y mobile */}
+      {/* Main title and logout button */}
       {isAuthenticated && (
         <div className="w-full max-w-7xl flex justify-between items-center mb-2 px-2">
-            <div className="text-white/50 text-xs">SYS_ONLINE</div>
+            <div className="text-white/50 text-xs">POKÉDEX MANAGER</div>
             <button 
                 onClick={handleLogout}
-                className="bg-red-900/80 hover:bg-red-600 text-red-100 px-6 py-2 rounded-full font-bold uppercase border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 group"
+                className="bg-red-900/80 hover:bg-red-700 text-red-100 px-6 py-2 rounded-full font-bold uppercase border-2 border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 group"
             >
-                <div className="w-2 h-2 rounded-full bg-red-500 group-hover:bg-white animate-pulse"></div>
-                APAGAR SISTEMA (LOGOUT)
+                <div className="w-2 h-2 rounded-full bg-red-500 group-hover:bg-white"></div>
+                APAGAR POKÉDEX (LOGOUT)
             </button>
         </div>
       )}
 
-      {/* --- CONTENEDOR PRINCIPAL (CASE ROJO) --- */}
-      <div className={`w-full max-w-7xl h-[85vh] md:h-[85vh] bg-red-600 rounded-3xl shadow-2xl border-4 border-red-800 flex flex-col lg:flex-row overflow-hidden relative ${!isAuthenticated && 'grayscale pointer-events-none'}`}>
+      {/* Main container using a similar design as the original pokedex */}
+      <div className={`w-full max-w-7xl h-[85vh] md:h-[85vh] bg-red-800 rounded-3xl shadow-2xl border-4 border-red-900 flex flex-col lg:flex-row overflow-hidden relative ${!isAuthenticated && 'grayscale pointer-events-none'}`}>
         
-        {/* --- TOGGLE MOBILE --- */}
+        {/* Toggle design for mobile users */}
         <div className="lg:hidden h-12 bg-red-800 flex shrink-0">
-          <button onClick={() => setMobileTab('left')} className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'left' ? 'bg-red-600 text-white shadow-inner' : 'text-red-300'}`}>IA & TEAM</button>
-          <button onClick={() => setMobileTab('right')} className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'right' ? 'bg-red-600 text-white shadow-inner' : 'text-red-300'}`}>DEX & DATA</button>
+          <button onClick={() => setMobileTab('left')} className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'left' ? 'bg-red-600 text-white shadow-inner' : 'text-red-300'}`}>IA & EQUIPO</button>
+          <button onClick={() => setMobileTab('right')} className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'right' ? 'bg-red-600 text-white shadow-inner' : 'text-red-300'}`}>POKÉDEX</button>
         </div>
 
-        {/* =================================================================================
-            🔵 PANEL IZQUIERDO: IA VISION & TEAM DASHBOARD
-           ================================================================================= */}
-        <div className={`lg:w-1/2 p-6 flex flex-col gap-4 border-r-0 lg:border-r-8 border-red-800 bg-red-600 ${mobileTab === 'left' ? 'block' : 'hidden lg:flex'}`}>
-          {/* ... (Contenido IA sin cambios) ... */}
+        {/* Left panel for the AI tools and team feature */}
+        <div className={`lg:w-1/2 p-6 flex flex-col gap-4 border-r-0 lg:border-r-8 border-red-800 bg-red-700 ${mobileTab === 'left' ? 'block' : 'hidden lg:flex'}`}>
           <div className="bg-slate-200 rounded-2xl p-4 border-b-4 border-slate-300 shadow-inner flex-1 flex flex-col relative">
             <div className="absolute top-2 left-2 flex gap-2">
                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white shadow animate-pulse"></div>
@@ -186,7 +212,7 @@ export default function Home() {
 
           <div className="bg-slate-800 rounded-2xl p-4 border-t-4 border-slate-900 shadow-inner flex-1 flex flex-col">
              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-yellow-400 text-xs font-bold uppercase">MY_TEAM_V1</h3>
+                <h3 className="text-yellow-400 text-xs font-bold uppercase">EQUIPO POKEMON DE {username || 'ENTRENADOR'}</h3>
                 <span className="text-slate-400 text-[10px]">{myTeam.length} / 6</span>
              </div>
              <div className="grid grid-cols-3 gap-2 flex-1">
@@ -210,42 +236,39 @@ export default function Home() {
           </div>
         </div>
 
-        {/* --- BISAGRA CENTRAL --- */}
+        {/* Center hinge for pokedex like design */}
         <div className="hidden lg:block w-8 bg-gradient-to-r from-red-900 via-red-600 to-red-900 h-full border-x border-red-950 relative z-10"></div>
 
-        {/* =================================================================================
-            🔴 PANEL DERECHO: DASHBOARD PRINCIPAL
-           ================================================================================= */}
-        <div className={`lg:w-1/2 p-6 flex flex-col bg-red-600 relative ${mobileTab === 'right' ? 'block' : 'hidden lg:flex'}`}>
+        {/* Right panel for main dashboard and features */}
+        <div className={`lg:w-1/2 p-6 flex flex-col bg-red-750 relative ${mobileTab === 'right' ? 'block' : 'hidden lg:flex'}`}>
           
-          {/* 1. BARRA SUPERIOR (Search & Filters) */}
+          {/* Search bar and filters */}
           <div className="bg-red-700 p-3 rounded-t-2xl border-b border-red-800 shadow-lg mb-4">
              <div className="flex gap-2 mb-3">
                 <div className="bg-slate-900 rounded p-2 border border-slate-700 flex items-center justify-center">
                     <span className="text-slate-500">🔍</span>
                 </div>
                 <input 
-                  type="text" placeholder="BUSCAR..." 
+                  type="text" placeholder="BUSCAR POR NOMBRE O #..." 
                   value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-slate-900 text-green-400 font-mono text-xs p-2 rounded border border-slate-700 outline-none uppercase"
                 />
              </div>
-             
-             {/* FILTROS MEJORADOS (ESTILO PILDORAS) */}
+
              <div className="flex flex-col gap-3">
                  <div className="flex gap-2">
                     <button onClick={() => setFilterCaught(!filterCaught)} className={`px-4 py-1 text-[10px] rounded-full uppercase font-bold border-2 transition-all shadow-sm ${filterCaught ? 'bg-blue-600 text-white border-blue-800' : 'bg-slate-800 text-slate-400 border-slate-900'}`}>
-                        {filterCaught ? 'VIEW: CAUGHT' : 'VIEW: ALL'}
+                        {filterCaught ? 'VIENDO: CAPTURADOS' : 'VIENDO: TODOS'}
                     </button>
                     {selectedType && (
                         <button onClick={() => setSelectedType(null)} className="px-3 py-1 text-[10px] rounded-full bg-red-900 text-white border border-red-500 font-bold uppercase hover:bg-red-800">
-                             CLEAR FILTER (X)
+                             LIMPIAR FILTROS (X)
                         </button>
                     )}
                  </div>
 
                  <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto custom-scrollbar p-1">
-                    {/* Lista completa de tipos */}
+                    {/* Types list */}
                     {['normal','fire','water','grass','electric','ice','fighting','poison','ground','flying','psychic','bug','rock','ghost','dragon','steel','fairy'].map(t => (
                        <button 
                             key={t} 
@@ -263,7 +286,7 @@ export default function Home() {
              </div>
           </div>
 
-          {/* 2. PANTALLA PRINCIPAL (Grid) */}
+          {/* Main pokemons grid */}
           <div className="flex-1 bg-slate-900 rounded-lg p-2 border-4 border-slate-700 shadow-[inset_0_0_20px_rgba(0,0,0,1)] overflow-hidden relative min-h-0">
              <div className="h-full overflow-y-auto custom-scrollbar pr-1">
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -286,7 +309,7 @@ export default function Home() {
              </div>
           </div>
 
-          {/* 3. PANEL DE CONTROL INFERIOR */}
+          {/* Pokemon's stats panel */}
           <div className="mt-4 bg-slate-200 rounded-xl p-3 border-t-4 border-slate-300 shadow-inner flex flex-col gap-3 shrink-0">
              <div className="bg-green-800 rounded border-2 border-green-900 p-2 h-14 flex items-center justify-between px-4 relative overflow-hidden shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
@@ -296,7 +319,7 @@ export default function Home() {
                      <div className="text-green-100 font-mono text-xs z-10 text-center"><p className="text-[8px] opacity-60">WGT</p><p>{selectedPokemon.weight / 10}kg</p></div>
                      <div className="text-green-100 font-mono text-xs z-10 text-center"><p className="text-[8px] opacity-60">TYPE</p><p className="uppercase">{selectedPokemon.types?.[0]?.substring(0,8) || '??'}</p></div>
                    </>
-                ) : <p className="w-full text-center text-green-500/50 text-xs animate-pulse">SELECT POKÉMON</p>}
+                ) : <p className="w-full text-center text-green-500/50 text-xs animate-pulse">SELECCIONA UN POKEMON</p>}
              </div>
 
              <div className="flex gap-2">

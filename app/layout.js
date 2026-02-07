@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'POKEDEX_SYS_v2026.exe',
+  title: 'POKEDEX MANAGER',
 };
 
 export default function RootLayout({ children }) {

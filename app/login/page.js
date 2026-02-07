@@ -34,33 +34,32 @@ function LoginContent() {
   return (
     <div className="bg-slate-950 border-4 border-slate-800 rounded-lg p-6 shadow-[inset_0_0_15px_rgba(0,0,0,1)]">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-cyan-400 text-lg tracking-tighter uppercase"> {'>'} LOGIN_SYS_v4</h2>
-        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+        <h2 className="text-cyan-400 text-lg tracking-tighter uppercase"> {'>'} INICIO DE SESIÓN</h2>
       </div>
 
       {/* --- ALERTA DE ÉXITO --- */}
       {isRegistered && !error && (
         <div className="mb-4 bg-green-900/20 border border-green-500 p-3 text-green-400 text-[10px] animate-bounce">
-          {'>'} ENTRENADOR_REGISTRADO_CON_ÉXITO. 
-          <br /> {'>'} POR_FAVOR_INICIE_SESIÓN.
+          {'>'} ENTRENADOR REGISTRADO CON ÉXITO
+          <br /> {'>'} POR FAVOR INICIE SESIÓN
         </div>
       )}
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="block text-slate-500 text-[10px] mb-1">USER_ID</label>
+          <label className="block text-slate-300 text-xs mb-1 uppercase">NOMBRE DE ENTRENADOR</label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-full bg-black border-b border-cyan-900 text-cyan-400 p-2 focus:border-cyan-400 outline-none transition-all"
-            placeholder="NOMBRE"
+            placeholder="USERNAME"
             required
           />
         </div>
 
         <div>
-          <label className="block text-slate-500 text-[10px] mb-1">ACCESS_CODE</label>
+          <label className="block text-slate-300 text-xs mb-1 uppercase">CONTRASEÑA</label>
           <input
             type="password"
             value={password}
@@ -82,12 +81,12 @@ function LoginContent() {
           disabled={loading}
           className="w-full bg-cyan-700 hover:bg-cyan-600 text-black font-bold py-3 rounded border-b-4 border-cyan-900 active:border-b-0 transition-all uppercase text-xs"
         >
-          {loading ? 'AUTENTICANDO...' : 'EJECUTAR_LOGIN'}
+          {loading ? 'AUTENTICANDO...' : 'INICIAR SESIÓN'}
         </button>
 
         <div className="mt-4 text-center">
-          <Link href="/register" className="text-[9px] text-slate-600 hover:text-purple-400 underline uppercase">
-            ¿No tienes cuenta? Crear nuevo registro
+          <Link href="/register" className="text-[12px] text-slate-600 hover:text-purple-400 underline uppercase">
+            ¿AUN NO ERES ENTRENADOR? ÚNETE AQUI
           </Link>
         </div>
       </form>
@@ -101,7 +100,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 font-mono">
       <div className="bg-red-600 p-1 rounded-3xl border-b-8 border-r-8 border-red-900 shadow-2xl max-w-md w-full">
         <div className="bg-slate-300 rounded-2xl p-6 border-4 border-red-700">
-          <Suspense fallback={<div className="text-black">Cargando sistema...</div>}>
+          <Suspense fallback={<div className="text-black">CARGANDO INICIO DE SESIÓN</div>}>
             <LoginContent />
           </Suspense>
         </div>
