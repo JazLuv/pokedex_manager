@@ -7,8 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 
 // Main pokedex manager component with original style design
 // Handles authentication via JWT, pokemon catalog management with search-filter capabilities,
-// capture/release system, and team building
-// Responsive for desktop and mobile with tab switching
+// capture/release system, team building, and AI strategy analysis
 
 export default function Home() {
   // Here the states constants will be defined for global pokemon data, state, user,
@@ -29,6 +28,10 @@ export default function Home() {
   const [aiResult, setAiResult] = useState(null); 
   const [aiImagePreview, setAiImagePreview] = useState(null); 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Team analysis constants
+  const [teamAnalysis, setTeamAnalysis] = useState(null);
+  const [isAnalyzingTeam, setIsAnalyzingTeam] = useState(false);
 
   const selectedPokemon = pokemons.find(p => p.id === selectedId);
 
@@ -82,6 +85,7 @@ export default function Home() {
     setMyTeam([]);
     setAiResult(null);
     setAiImagePreview(null);
+    setTeamAnalysis(null);
     const placeholders = Array.from({ length: 151 }, (_, i) => ({
       id: i + 1, name: 'UNKNOWN_DATA', image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${i + 1}.png`, captured: false, types: ['normal']
     }));
@@ -104,6 +108,8 @@ export default function Home() {
     } else {
       setMyTeam(prev => [...prev, pokemon]);
     }
+    // Clear previous analysis when team changes
+    setTeamAnalysis(null);
     try {
       const token = localStorage.getItem('token');
       await axios.put('/api/pokemon', 
@@ -117,6 +123,59 @@ export default function Home() {
       alert("ERROR AL GUARDAR EQUIPO (Revertiendo cambios...)");
       if (isInTeam) setMyTeam(prev => [...prev, pokemon]);
       else setMyTeam(prev => prev.filter(p => p.id !== pokemon.id));
+    }
+  };
+
+  // Sends the current team and captured collection to the AI service for strategic analysis,
+  // formats pokemon data with id, name, and types for the LLM prompt
+  const handleAnalyzeTeam = async () => {
+    if (myTeam.length === 0) {
+      alert("EQUIPO VACÍO: Agrega Pokémon a tu equipo antes de analizar.");
+      return;
+    }
+
+    setIsAnalyzingTeam(true);
+    setTeamAnalysis(null);
+
+    // Build team data with types
+    const teamData = myTeam.map(p => ({
+      id: p.id,
+      name: p.name,
+      types: p.types || []
+    }));
+
+    // Build collection data: captured pokemon NOT in the team
+    const teamIds = new Set(myTeam.map(p => p.id));
+    const collectionData = pokemons
+      .filter(p => p.captured && !teamIds.has(p.id))
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        types: p.types || []
+      }));
+
+    try {
+      const res = await fetch('http://localhost:8000/analyze-team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team: teamData,
+          collection: collectionData
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        setTeamAnalysis({ error: data.error });
+      } else {
+        setTeamAnalysis({ text: data.analysis });
+      }
+    } catch (error) {
+      console.error('Error análisis de equipo:', error);
+      setTeamAnalysis({ error: "ERROR DE CONEXIÓN CON MÓDULO IA (¿Está corriendo uvicorn?)" });
+    } finally {
+      setIsAnalyzingTeam(false);
     }
   };
 
@@ -146,7 +205,7 @@ export default function Home() {
            confidence: data.confidence,
            id: foundInDex?.id || '???',
            captured: foundInDex?.captured || false,
-           dataObject: foundInDex // Guardamos la ref completa
+           dataObject: foundInDex
          });
       }
     } catch (error) {
@@ -328,7 +387,7 @@ export default function Home() {
                      
                      <div className="flex gap-4 z-20">
                        <label htmlFor="ai-upload" className="cursor-pointer bg-slate-700 text-white px-4 py-2 text-[10px] rounded border border-slate-500 hover:bg-slate-600 flex items-center gap-2 shadow-lg transition-all hover:scale-105">
-                          <span>📁</span> SUBIR IMAGEN
+                          <span></span> SUBIR IMAGEN
                        </label>
                      </div>
                   </>
@@ -357,9 +416,62 @@ export default function Home() {
                    )
                 })}
              </div>
-             <button className="mt-3 w-full bg-cyan-700 text-white py-2 rounded text-xs font-bold border-b-4 border-cyan-900 active:border-b-0 uppercase hover:bg-cyan-600 transition-all flex items-center justify-center gap-2">
-                <span className="animate-spin text-[10px]">⚙</span> ANALIZAR ESTRATEGIA (IA)
+
+             {/* AI team analysis button */}
+             <button 
+               onClick={handleAnalyzeTeam}
+               disabled={isAnalyzingTeam || myTeam.length === 0}
+               className={`mt-3 w-full py-2 rounded text-xs font-bold border-b-4 active:border-b-0 uppercase transition-all flex items-center justify-center gap-2
+                 ${myTeam.length === 0 
+                   ? 'bg-slate-600 text-slate-400 border-slate-700 cursor-not-allowed' 
+                   : isAnalyzingTeam 
+                     ? 'bg-yellow-700 text-yellow-200 border-yellow-900 cursor-wait'
+                     : 'bg-cyan-700 text-white border-cyan-900 hover:bg-cyan-600'
+                 }`}
+             >
+                {isAnalyzingTeam ? (
+                  <>
+                    <span className="animate-spin"></span> ANALIZANDO CON IA
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[10px]"></span>ANALIZAR ESTRATEGIA (IA)
+                  </>
+                )}
              </button>
+
+             {/* Team Analysis Result Display */}
+             {(teamAnalysis || isAnalyzingTeam) && (
+               <div className="mt-3 bg-black rounded border-2 border-cyan-900 p-3 max-h-40 overflow-y-auto custom-scrollbar relative">
+                  <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,100,100,0.05)_50%)] bg-[length:100%_4px] pointer-events-none z-0"></div>
+                  
+                  {isAnalyzingTeam && (
+                    <div className="flex items-center gap-2 z-10 relative">
+                      <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-cyan-500 text-[10px] animate-pulse">CONSULTANDO IA POKEMON</p>
+                    </div>
+                  )}
+
+                  {teamAnalysis?.error && (
+                    <p className="text-red-400 text-[10px] z-10 relative">
+                      [ERROR]: {teamAnalysis.error.toUpperCase()}
+                    </p>
+                  )}
+
+                  {teamAnalysis?.text && (
+                    <div className="z-10 relative">
+                      <p className="text-cyan-300 text-[10px] mb-1 font-bold uppercase">ANÁLISIS ESTRATÉGICO:</p>
+                      <p className="text-green-300 text-[10px] leading-relaxed whitespace-pre-wrap">{teamAnalysis.text}</p>
+                      <button 
+                        onClick={() => setTeamAnalysis(null)} 
+                        className="mt-2 text-slate-500 text-[8px] hover:text-slate-300 uppercase underline"
+                      >
+                        CERRAR ANÁLISIS
+                      </button>
+                    </div>
+                  )}
+               </div>
+             )}
           </div>
         </div>
 
