@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Esto forzará un fondo oscuro mientras carga Tailwind */
+/* Black wallpaper while it loads */
 body {
   background-color: #0f172a;
   color: white;
