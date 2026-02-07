@@ -23,8 +23,14 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState(null);
   const [myTeam, setMyTeam] = useState([]); 
   const [mobileTab, setMobileTab] = useState('right'); 
-  const selectedPokemon = pokemons.find(p => p.id === selectedId);
   const [username, setUsername] = useState('');
+
+  // AI constants
+  const [aiResult, setAiResult] = useState(null); 
+  const [aiImagePreview, setAiImagePreview] = useState(null); 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const selectedPokemon = pokemons.find(p => p.id === selectedId);
 
   // Captures a pokemon by sending POST request to API with JWT token,
   // then updates local state to mark it as captured
@@ -35,6 +41,11 @@ export default function Home() {
       await axios.post('/api/pokemon', { pokemonId }, { headers: { Authorization: `Bearer ${token}` } });
       const updateList = (list) => list.map(p => p.id === pokemonId ? { ...p, captured: true } : p);
       setPokemons(prev => updateList(prev));
+      
+      // Update AI result UI if the captured pokemon matches the AI result
+      if (aiResult && aiResult.dataObject && aiResult.dataObject.id === pokemonId) {
+          setAiResult(prev => ({ ...prev, captured: true }));
+      }
     } catch (error) {
       alert("ERROR DE CAPTURA: " + (error.response?.data?.error || "OFFLINE"));
     }
@@ -50,6 +61,10 @@ export default function Home() {
       const updateList = (list) => list.map(p => p.id === pokemonId ? { ...p, captured: false, is_team: false } : p);
       setPokemons(prev => updateList(prev));
       setMyTeam(prev => prev.filter(p => p.id !== pokemonId));
+
+      if (aiResult && aiResult.dataObject && aiResult.dataObject.id === pokemonId) {
+          setAiResult(prev => ({ ...prev, captured: false }));
+      }
     } catch (error) {
       alert("ERROR DE LIBERACIÓN: " + (error.response?.data?.error || "OFFLINE"));
     }
@@ -65,6 +80,8 @@ export default function Home() {
     setSearchTerm('');
     setSelectedType(null);
     setMyTeam([]);
+    setAiResult(null);
+    setAiImagePreview(null);
     const placeholders = Array.from({ length: 151 }, (_, i) => ({
       id: i + 1, name: 'UNKNOWN_DATA', image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${i + 1}.png`, captured: false, types: ['normal']
     }));
@@ -72,23 +89,77 @@ export default function Home() {
     setFilteredPokemons(placeholders);
   };
 
-  // Adds or removes pokemon from the user's team with validation:
-  // requires authentication, only captured Pokémon allowed, maximum 6 pokemon
-  const toggleTeamMember = (pokemon) => {
+  // Adds or removes Pokémon from the user's team, validates authentication, 6 Pokémon maximum, and only captured Pokémon
+  // Updates UI immediately for responsiveness, then syncs with database via PUT request
+  const toggleTeamMember = async (pokemon) => {
     if (!isAuthenticated) return;
     const isInTeam = myTeam.find(p => p.id === pokemon.id);
+    const newStatus = !isInTeam;
+    if (newStatus && myTeam.length >= 6) {
+        alert("EQUIPO LLENO: MÁXIMO 6 POKEMON.");
+        return;
+    }
     if (isInTeam) {
       setMyTeam(prev => prev.filter(p => p.id !== pokemon.id));
     } else {
-      if (myTeam.length >= 6) {
-        alert("EQUIPO LLENO: MÁXIMO 6 POKEMON.");
-        return;
-      }
       setMyTeam(prev => [...prev, pokemon]);
+    }
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('/api/pokemon', 
+        { pokemonId: pokemon.id, isTeam: newStatus }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const updateList = (list) => list.map(p => p.id === pokemon.id ? { ...p, is_team: newStatus } : p);
+      setPokemons(prev => updateList(prev));
+    } catch (error) {
+      console.error("Error syncing team:", error);
+      alert("ERROR AL GUARDAR EQUIPO (Revertiendo cambios...)");
+      if (isInTeam) setMyTeam(prev => [...prev, pokemon]);
+      else setMyTeam(prev => prev.filter(p => p.id !== pokemon.id));
     }
   };
 
-   useEffect(() => {
+  // Handles image upload for AI pokemon classification, shows immediate preview, sends image to port 8000 for classification,
+  // processes result to match against local pokedex by name, and displays pokemon id, confidence score, and capture status
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setAiImagePreview(reader.result);
+    reader.readAsDataURL(file);
+    setIsAnalyzing(true);
+    setAiResult(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('http://localhost:8000/classify', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.pokemon) {
+         const pokeName = data.pokemon.toLowerCase();
+         const foundInDex = pokemons.find(p => p.name === pokeName);
+         setAiResult({
+           name: pokeName,
+           confidence: data.confidence,
+           id: foundInDex?.id || '???',
+           captured: foundInDex?.captured || false,
+           dataObject: foundInDex // Guardamos la ref completa
+         });
+      }
+    } catch (error) {
+      console.error('Error IA:', error);
+      alert("ERROR DE CONEXIÓN CON MÓDULO IA (¿Está corriendo uvicorn?)");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Runs once on mount to decode JWT token from localStorage and extract username for personalized UI display
+  // Falls back to 'ENTRENADOR' if token is invalid or missing
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       setIsAuthenticated(false);
@@ -102,8 +173,7 @@ export default function Home() {
       console.error('Error decodificando token:', error);
       setUsername('ENTRENADOR');
     }
-  },
-  ),
+  }, []);
 
   // Applies search and filters to pokemon list whenever searchTerm, filterCaught, selectedType, or pokemons changes
   // Filters by name/number, capture status, and type, then updates filteredPokemons state.
@@ -178,7 +248,7 @@ export default function Home() {
                 className="bg-red-900/80 hover:bg-red-700 text-red-100 px-6 py-2 rounded-full font-bold uppercase border-2 border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 group"
             >
                 <div className="w-2 h-2 rounded-full bg-red-500 group-hover:bg-white"></div>
-                APAGAR POKÉDEX (LOGOUT)
+                APAGAR POKÉDEX DE {username || 'ENTRENADOR'} (LOGOUT)
             </button>
         </div>
       )}
@@ -194,22 +264,79 @@ export default function Home() {
 
         {/* Left panel for the AI tools and team feature */}
         <div className={`lg:w-1/2 p-6 flex flex-col gap-4 border-r-0 lg:border-r-8 border-red-800 bg-red-700 ${mobileTab === 'left' ? 'block' : 'hidden lg:flex'}`}>
+          
+          {/* AI screen and results */}
           <div className="bg-slate-200 rounded-2xl p-4 border-b-4 border-slate-300 shadow-inner flex-1 flex flex-col relative">
             <div className="absolute top-2 left-2 flex gap-2">
                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white shadow animate-pulse"></div>
                <div className="w-3 h-3 rounded-full bg-red-500 mt-1"></div>
                <div className="w-3 h-3 rounded-full bg-yellow-500 mt-1"></div>
             </div>
+
             <div className="mt-8 flex-1 bg-black rounded border-4 border-gray-400 flex flex-col items-center justify-center relative overflow-hidden">
                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,100,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none z-10"></div>
-               <p className="text-green-500 text-xs text-center px-4">[!] SENSOR DE CÁMARA DESACTIVADO<br/>ESPERANDO MÓDULO IA...</p>
-               <div className="flex gap-4 mt-4 z-20">
-                 <button className="bg-blue-600 text-white px-3 py-1 text-[10px] rounded border border-blue-400 hover:bg-blue-500">TOMAR FOTO</button>
-                 <button className="bg-slate-700 text-white px-3 py-1 text-[10px] rounded border border-slate-500 hover:bg-slate-600">SUBIR IMG</button>
-               </div>
+               
+               {isAnalyzing && (
+                  <div className="z-20 flex flex-col items-center">
+                     <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                     <p className="text-green-500 text-xs animate-pulse">PROCESANDO RED NEURONAL</p>
+                  </div>
+               )}
+
+               {!isAnalyzing && aiResult && (
+                  <div className="z-20 flex flex-col items-center w-full h-full p-2 justify-center">
+                     {aiImagePreview && (
+                        <img src={aiImagePreview} alt="Analisis" className="h-28 object-contain border-2 border-green-900 mb-2 bg-slate-900" />
+                     )}
+                     <div className="bg-green-900/90 w-full p-2 border border-green-500 text-green-100 font-mono text-xs shadow-lg mb-1">
+                        <p>DETECTADO: <span className="font-bold uppercase text-yellow-400">{aiResult.name}</span></p>
+                        <p>CONFIANZA: {aiResult.confidence}</p>
+                        <p>ESTADO: {aiResult.captured ? "CAPTURADO" : "NO CAPTURADO"}</p>
+                     </div>
+                     
+                     {!aiResult.captured && aiResult.dataObject && (
+                        <button 
+                          onClick={() => handleCapture(aiResult.dataObject.id)}
+                          className="mt-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-[10px] font-bold uppercase border-blue-400 shadow-lg"
+                        >
+                           CAPTURAR AHORA
+                        </button>
+                     )}
+
+                     <button 
+                       onClick={() => { setAiResult(null); setAiImagePreview(null); }}
+                       className="mt-2  bg-slate-600 hover:bg-slate-500 text-black px-4 py-2 rounded text-[10px] font-bold uppercase border-slate-400 shadow-lg"
+                     >
+                       INTENTAR DE NUEVO
+                     </button>
+                  </div>
+               )}
+
+               {!isAnalyzing && !aiResult && (
+                  <>
+                     <p className="text-green-500 text-xs text-center px-4 mb-4">
+                        {aiImagePreview ? "IMAGEN LISTA PARA ANÁLISIS" : "IDENTIFICAR POKEMON DE REGIÓN KANTO EN FOTO"}
+                     </p>
+                     
+                     <input 
+                       type="file" 
+                       id="ai-upload" 
+                       accept="image/*" 
+                       className="hidden" 
+                       onChange={handleImageUpload}
+                     />
+                     
+                     <div className="flex gap-4 z-20">
+                       <label htmlFor="ai-upload" className="cursor-pointer bg-slate-700 text-white px-4 py-2 text-[10px] rounded border border-slate-500 hover:bg-slate-600 flex items-center gap-2 shadow-lg transition-all hover:scale-105">
+                          <span>📁</span> SUBIR IMAGEN
+                       </label>
+                     </div>
+                  </>
+               )}
             </div>
           </div>
 
+          {/* Team dashboard */}
           <div className="bg-slate-800 rounded-2xl p-4 border-t-4 border-slate-900 shadow-inner flex-1 flex flex-col">
              <div className="flex justify-between items-center mb-2">
                 <h3 className="text-yellow-400 text-xs font-bold uppercase">EQUIPO POKEMON DE {username || 'ENTRENADOR'}</h3>
@@ -254,7 +381,7 @@ export default function Home() {
                   className="w-full bg-slate-900 text-green-400 font-mono text-xs p-2 rounded border border-slate-700 outline-none uppercase"
                 />
              </div>
-
+             
              <div className="flex flex-col gap-3">
                  <div className="flex gap-2">
                     <button onClick={() => setFilterCaught(!filterCaught)} className={`px-4 py-1 text-[10px] rounded-full uppercase font-bold border-2 transition-all shadow-sm ${filterCaught ? 'bg-blue-600 text-white border-blue-800' : 'bg-slate-800 text-slate-400 border-slate-900'}`}>

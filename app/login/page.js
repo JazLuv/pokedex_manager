@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
 
-// Componente interno para manejar los parámetros de búsqueda
+// Internal component that manages username and password state, submits credentials to /api/auth/login endpoint,
+// stores JWT token in localStorage on success, displays success banner and redirects to home page after successful login
 function LoginContent() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -13,7 +14,7 @@ function LoginContent() {
   
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isRegistered = searchParams.get('registered'); // Detecta si viene del registro
+  const isRegistered = searchParams.get('registered');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ function LoginContent() {
     try {
       const res = await axios.post('/api/auth/login', { username, password });
       localStorage.setItem('token', res.data.token);
-      router.push('/'); // Redirige a la página principal después del login
+      router.push('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Error de acceso');
     } finally {
@@ -37,7 +38,6 @@ function LoginContent() {
         <h2 className="text-cyan-400 text-lg tracking-tighter uppercase"> {'>'} INICIO DE SESIÓN</h2>
       </div>
 
-      {/* --- ALERTA DE ÉXITO --- */}
       {isRegistered && !error && (
         <div className="mb-4 bg-green-900/20 border border-green-500 p-3 text-green-400 text-[10px] animate-bounce">
           {'>'} ENTRENADOR REGISTRADO CON ÉXITO
@@ -94,7 +94,7 @@ function LoginContent() {
   );
 }
 
-// Layout principal del login
+// Main login page component
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 font-mono">
