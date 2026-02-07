@@ -1,8 +1,9 @@
 import { getDb } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
-import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
+// POST: handles user registration for new trainers, validates that username and password are provided,
+// hashes the password using bcrypt for security and inserts the new user into the database
 export async function POST(request) {
   try {
     const { username, password } = await request.json();
