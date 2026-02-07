@@ -172,7 +172,7 @@ export default function Home() {
       {/* Main title and logout button */}
       {isAuthenticated && (
         <div className="w-full max-w-7xl flex justify-between items-center mb-2 px-2">
-            <div className="text-white/50 text-xs">POKÉDEX MANAGER</div>
+            <div className="text-white/50 text-xs">POKÉDEX MANAGER BY JAZIEL BENITEZ ALAVEZ</div>
             <button 
                 onClick={handleLogout}
                 className="bg-red-900/80 hover:bg-red-700 text-red-100 px-6 py-2 rounded-full font-bold uppercase border-2 border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 group"
