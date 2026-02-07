@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
 
+// Registration page component that manages username/password form state,
+// submits registration data to /api/auth/register endpoint, redirects to login page with success flag
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -11,16 +13,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Handles form submission for new user registration
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // Petición a tu API de registro que ya configuramos
       await axios.post('/api/auth/register', { username, password });
-      
-      // Si el registro es exitoso, lo enviamos al login
       router.push('/login?registered=true');
     } catch (err) {
       setError(err.response?.data?.error || 'Error en el sistema de registro');

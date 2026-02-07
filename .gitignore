@@ -1,6 +1,32 @@
+node_modules/
+/.next/
+/out/
+/build
+*.log*
+
+venv/
+.venv/
+env/
+/ai_service/venv/
+__pycache__/
+*.py[cod]
+
+*.db
+*.sqlite
+*.sqlite3
+
 .env
+<<<<<<< HEAD
 node_modules
 .next/
 out/
 build/
 *.db
+=======
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+>>>>>>> ai
