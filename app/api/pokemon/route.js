@@ -38,10 +38,10 @@ export async function GET(request) {
     let baseData;
 
     if (cachedGen1Data) {
-      console.log("⚡ RAM CACHE HIT: Serving data instantly.");
+      console.log("RAM HIT: Serving data instantly.");
       baseData = cachedGen1Data;
     } else {
-      console.log("🐢 RAM CACHE MISS: Fetching from PokéAPI with Batching Strategy...");
+      console.log("RAM MISS: Fetching from PokéAPI with Batching Strategy...");
       
       const listResponse = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=151');
       const baseList = listResponse.data.results;
@@ -68,7 +68,7 @@ export async function GET(request) {
       });
 
       baseData = cachedGen1Data;
-      console.log("✅ Data cached successfully.");
+      console.log("Data cached successfully.");
     }
 
     const userRows = await db.all(
