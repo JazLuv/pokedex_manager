@@ -291,7 +291,7 @@ export default function Home() {
       {/* Overlay for the login */}
       {!isAuthenticated && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-          <h1 className="text-4xl font-black text-white mb-8 tracking-tighter">POKÉDEX MANAGER DE {username || 'ENTRENADOR'}</h1>
+          <h1 className="text-4xl font-black text-white mb-8 tracking-tighter">POKÉDEX MANAGER DE ENTRENADOR</h1>
           <Link href="/login" className="bg-green-500 hover:bg-green-400 text-black px-12 py-6 rounded font-bold text-2xl shadow-[0_0_30px_rgba(34,197,94,0.6)]">
             IDENTIFÍCATE ENTRENADOR (LOGIN)
           </Link>
@@ -431,18 +431,18 @@ export default function Home() {
              >
                 {isAnalyzingTeam ? (
                   <>
-                    <span className="animate-spin"></span> ANALIZANDO CON IA
+                    <span className="animate-spin"></span> ANALIZANDO CON IA POKEMON
                   </>
                 ) : (
                   <>
-                    <span className="text-[10px]"></span>ANALIZAR ESTRATEGIA (IA)
+                    <span className="text-[10px]"></span>ANALIZAR EQUIPO CON IA
                   </>
                 )}
              </button>
 
-             {/* Team Analysis Result Display */}
+             {/* Team analysis result display */}
              {(teamAnalysis || isAnalyzingTeam) && (
-               <div className="mt-3 bg-black rounded border-2 border-cyan-900 p-3 max-h-40 overflow-y-auto custom-scrollbar relative">
+               <div className={`mt-3 bg-black rounded border-2 border-cyan-900 p-3 overflow-y-auto custom-scrollbar relative transition-all duration-300 ${aiImagePreview ? 'max-h-32' : 'max-h-80'} flex-1`}>
                   <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,100,100,0.05)_50%)] bg-[length:100%_4px] pointer-events-none z-0"></div>
                   
                   {isAnalyzingTeam && (
@@ -460,7 +460,7 @@ export default function Home() {
 
                   {teamAnalysis?.text && (
                     <div className="z-10 relative">
-                      <p className="text-cyan-300 text-[10px] mb-1 font-bold uppercase">ANÁLISIS ESTRATÉGICO:</p>
+                      <p className="text-cyan-300 text-[10px] mb-1 font-bold uppercase">ANÁLISIS DE EQUIPO:</p>
                       <p className="text-green-300 text-[10px] leading-relaxed whitespace-pre-wrap">{teamAnalysis.text}</p>
                       <button 
                         onClick={() => setTeamAnalysis(null)} 
@@ -479,7 +479,7 @@ export default function Home() {
         <div className="hidden lg:block w-8 bg-gradient-to-r from-red-900 via-red-600 to-red-900 h-full border-x border-red-950 relative z-10"></div>
 
         {/* Right panel for main dashboard and features */}
-        <div className={`lg:w-1/2 p-6 flex flex-col bg-red-750 relative ${mobileTab === 'right' ? 'block' : 'hidden lg:flex'}`}>
+        <div className={`lg:w-1/2 p-6 flex flex-col bg-red-750 relative ${mobileTab === 'right' ? 'flex flex-1 overflow-hidden' : 'hidden lg:flex'}`}>
           
           {/* Search bar and filters */}
           <div className="bg-red-700 p-3 rounded-t-2xl border-b border-red-800 shadow-lg mb-4">
