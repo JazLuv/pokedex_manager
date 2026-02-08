@@ -1,11 +1,11 @@
-# 🎮 POKÉDEX MANAGER - Aplicación Full-Stack con IA
+# POKÉDEX MANAGER - Aplicación Full-Stack con IA
 
 > **Proyecto desarrollado por:** Jaziel Benitez Alavez  
 > **Stack:** Next.js 15 + Python FastAPI + SQLite + IA Multimodal
 
 ---
 
-## 🚀 Quick Start ¡Atrápalos ya!
+## Quick Start ¡Atrápalos ya!
 
 ```bash
 # 1. Clonar repositorio
@@ -42,7 +42,7 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 📋 Tabla de Contenidos
+## Tabla de Contenidos
 
 1. [Descripción General](#-descripción-general)
 2. [Características Principales](#-características-principales)
@@ -58,38 +58,38 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 🎯 Descripción General
+## Descripción General
 
 **PokéDex Manager** es una aplicación web full-stack que permite gestionar una colección personal de los 151 Pokémon de la primera generación Kanto.
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-### 🔐 Autenticación
+### Autenticación
 - Registro con username único
 - Login con JWT (24h de expiración)
 - Contraseñas hasheadas con bcrypt (10 rounds)
 - Validación en cada request
 
-### 📚 Gestión de Pokédex
+### Gestión de Pokédex
 - 151 Pokémon de Gen 1 (Kanto)
 - Captura y liberación
 - Búsqueda por nombre o número (#1-151)
 - Filtros por tipo y estado de captura
 - Stats: altura, peso, tipos
 
-### 👥 Sistema de Equipos
+### Sistema de Equipos
 - Máximo 6 Pokémon por equipo
 - Solo Pokémon capturados pueden ser añadidos
 - Persistencia en base de datos
 - Visualización en panel lateral
 
-### 🤖 IA (Bonus)
+### IA (Bonus)
 - **Clasificación de imágenes:** Sube foto → identifica Pokémon (ViT model)
 - **Análisis estratégico:** Analiza debilidades del equipo y sugiere mejoras (LLM)
 
-### 🎨 UI/UX
+### UI/UX
 - Diseño retro inspirado en Pokédex clásica
 - Responsive: tabs en móvil, 2 paneles en desktop
 - Paleta: rojo, cyan, slate
@@ -97,7 +97,7 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 🏗️ Arquitectura del Proyecto
+## Arquitectura del Proyecto
 
 ### Patrón de Diseño
 El proyecto sigue una **arquitectura de microservicios híbrida** con separación clara de responsabilidades:
@@ -182,7 +182,7 @@ El proyecto sigue una **arquitectura de microservicios híbrida** con separació
 
 ---
 
-## 🎯 Funcionalidades Implementadas
+## Funcionalidades Implementadas
 
 #### 1. Sistema de Autenticación
 - **Registro:** `/app/register/page.js`
@@ -282,7 +282,7 @@ CREATE TABLE collection (
 
 ---
 
-### Funcionalidades Bonus con IA 🚀
+### Funcionalidades Bonus con IA
 
 #### 1. Clasificación de Imágenes con ViT
 
@@ -360,7 +360,7 @@ Sé breve, directo y táctico. Español. Máximo 150 palabras.
 
 ---
 
-## 📦 Instalación Detallada
+## Instalación Detallada
 
 ### Prerrequisitos
 - Node.js v18.0+
@@ -440,7 +440,7 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 
 ---
 
-## 📖 Guía de Uso
+## Guía de Uso
 
 ### 1. Registro e Inicio de Sesión
 
@@ -510,15 +510,15 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 6. Si no está capturado, click "CAPTURAR AHORA"
 
 **Mejores resultados con:**
-- ✅ Sprites oficiales de juegos
-- ✅ Fan art claro y centrado
-- ✅ Fondo blanco o transparente
-- ✅ Pokémon mirando al frente
+- Sprites oficiales de juegos
+- Fan art claro y centrado
+- Fondo blanco o transparente
+- Pokémon mirando al frente
 
 **Evitar:**
-- ❌ Fotos borrosas
-- ❌ Múltiples Pokémon en una imagen
-- ❌ Pokémon de generaciones 2-9
+- Fotos borrosas
+- Múltiples Pokémon en una imagen
+- Pokémon de generaciones 2-9
 
 ### 6. Analizar Equipo con IA
 
@@ -541,7 +541,7 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 
 ---
 
-## 🛠️ Stack Tecnológico y Decisiones
+## Stack Tecnológico y Decisiones
 
 ### Frontend
 | Tecnología | Versión | Por qué se eligió |
@@ -579,27 +579,27 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 #### 1. ¿Por qué Next.js 15 vs otras alternativas?
 
 **Ventajas para este proyecto:**
-- ✅ API Routes integradas (backend incluido)
-- ✅ App Router con routing basado en archivos
-- ✅ Optimizaciones built-in (code splitting, image optimization)
+- API Routes integradas (backend incluido)
+- App Router con routing basado en archivos
+- Optimizaciones built-in (code splitting, image optimization)
 
 **Alternativas descartadas:**
-- ❌ **Vite + React:** Requeriría Express separado
-- ❌ **Create React App:** Deprecado, sin SSR
+- **Vite + React:** Requeriría Express separado
+- **Create React App:** Deprecado, sin SSR
 
 ---
 
 #### 2. ¿Por qué SQLite vs PostgreSQL/MongoDB?
 
 **A favor:**
-- ✅ Zero configuración (no necesita servidor DB)
-- ✅ Portable (archivo único `data/pokedex.db`)
-- ✅ ACID compliant
-- ✅ Rápido para lecturas (ideal para este caso de uso)
+- Zero configuración (no necesita servidor DB)
+- Portable (archivo único `data/pokedex.db`)
+- ACID compliant
+- Rápido para lecturas (ideal para este caso de uso)
 
 **Limitaciones conocidas:**
-- ⚠️ No soporta múltiples servidores (conexiones remotas)
-- ⚠️ Máx ~1000 usuarios concurrentes
+- No soporta múltiples servidores (conexiones remotas)
+- Máx ~1000 usuarios concurrentes
 
 **Migración a producción:** SQLite → PostgreSQL (mismo schema)
 
@@ -610,13 +610,13 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 **Decisión:** `localStorage` con header `Authorization: Bearer`
 
 **Justificación:**
-- ✅ Implementación simple en 3 días
-- ✅ Compatible con API Routes de Next.js
-- ✅ Fácil acceso desde cliente (decodificar username)
+- Implementación simple en 3 días
+- Compatible con API Routes de Next.js
+- Fácil acceso desde cliente (decodificar username)
 
 **Riesgos conocidos:**
-- ⚠️ Vulnerable a XSS (mitigado por sanitización de Next.js)
-- ⚠️ No revocable sin blacklist
+- Vulnerable a XSS (mitigado por sanitización de Next.js)
+- No revocable sin blacklist
 
 **Mejora para producción:** httpOnly cookies + refresh tokens
 
@@ -625,15 +625,15 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 #### 4. ¿Por qué microservicio Python separado?
 
 **Justificación:**
-- ✅ PyTorch/Transformers solo existe en Python
-- ✅ Separation of concerns (IA como módulo independiente)
-- ✅ Escalabilidad independiente
-- ✅ Mejor soporte GPU (CUDA)
-- ✅ No bloquea servidor Next.js principal
+- PyTorch/Transformers solo existe en Python
+- Separation of concerns (IA como módulo independiente)
+- Escalabilidad independiente
+- Mejor soporte GPU (CUDA)
+- No bloquea servidor Next.js principal
 
 **Alternativas descartadas:**
-- ❌ **TensorFlow.js:** Ecosistema menos maduro para ViT
-- ❌ **ONNX.js:** Menor precisión, más lento en CPU
+- **TensorFlow.js:** Ecosistema menos maduro para ViT
+- **ONNX.js:** Menor precisión, más lento en CPU
 
 ---
 
@@ -642,10 +642,10 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 **Decisión:** Variable global `let cachedGen1Data = null`
 
 **Justificación:**
-- ✅ Datos estáticos (Pokémon Gen 1 nunca cambia)
-- ✅ Zero dependencies
-- ✅ Latencia ultra-baja (microsegundos)
-- ✅ Suficiente para scope (1 instancia Next.js)
+- Datos estáticos (Pokémon Gen 1 nunca cambia)
+- Zero dependencies
+- Latencia ultra-baja (microsegundos)
+- Suficiente para scope (1 instancia Next.js)
 
 **Cuándo migrar a Redis:**
 - Múltiples instancias Next.js (load balancing)
@@ -656,10 +656,10 @@ La base de datos `data/pokedex.db` se crea automáticamente al iniciar.
 #### 6. ¿Por qué OpenRouter vs API directa?
 
 **Ventajas:**
-- ✅ Multi-modelo (Gemini, GPT, Claude con misma API)
-- ✅ Fallback automático si un modelo falla
-- ✅ Rate limiting unificado
-- ✅ No vendor lock-in
+- Multi-modelo (Gemini, GPT, Claude con misma API)
+- Fallback automático si un modelo falla
+- Rate limiting unificado
+- No vendor lock-in
 
 **Configuración flexible:**
 ```env
@@ -669,7 +669,7 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet   # Alternativa
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 pokedex-manager/
@@ -731,7 +731,7 @@ pokedex-manager/
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 ### Autenticación
 
@@ -988,7 +988,7 @@ Content-Type: application/json
 
 ---
 
-## 🔒 Seguridad y Optimizaciones
+## Seguridad y Optimizaciones
 
 ### Seguridad Implementada
 
@@ -1036,7 +1036,7 @@ if (cachedGen1Data) {
 }
 ```
 
-**Resultado:** Primera carga 30s → Subsecuentes 50ms ⚡
+**Resultado:** Primera carga 30s → Subsecuentes 50ms
 
 ---
 
@@ -1060,9 +1060,9 @@ for (const batch of batches) {
 **Decisión:** Búsqueda y filtros en cliente (no servidor)
 
 **Justificación:**
-- ✅ 151 Pokémon = ~500KB JSON (cabe en memoria)
-- ✅ Filtros instantáneos sin round-trip
-- ✅ Reduce carga del servidor
+- 151 Pokémon = ~500KB JSON (cabe en memoria)
+- Filtros instantáneos sin round-trip
+- Reduce carga del servidor
 
 **Cuándo mover a servidor:** Catálogo >1000 items
 
@@ -1095,7 +1095,7 @@ model.to(device)
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Problema: "Module not found" al iniciar
 
@@ -1222,7 +1222,7 @@ PORT=3001 npm run dev
 
 ---
 
-## 📜 Contacto
+## Contacto
 
 **Autor:** Jaziel Benitez Alavez  
 **Fecha:** Febrero 2025  
@@ -1232,7 +1232,7 @@ PORT=3001 npm run dev
 
 ---
 
-## 🙏 Agradecimientos
+## Agradecimientos
 
 - **PokéAPI** - Datos oficiales de Pokémon
 - **Hugging Face** - Modelo ViT `imjeffhi/pokemon_classifier`
