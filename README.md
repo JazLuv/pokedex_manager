@@ -44,17 +44,17 @@ uvicorn main:app --reload --port 8000
 
 ## Tabla de Contenidos
 
-1. [Descripción General](#-descripción-general)
-2. [Características Principales](#-características-principales)
-3. [Arquitectura del Proyecto](#-arquitectura-del-proyecto)
-4. [Funcionalidades Implementadas](#-funcionalidades-implementadas)
-5. [Stack Tecnológico y Decisiones](#-stack-tecnológico-y-decisiones)
-6. [Instalación Detallada](#-instalación-detallada)
-7. [Guía de Uso](#-guía-de-uso)
-8. [Estructura del Proyecto](#-estructura-del-proyecto)
-9. [API Reference](#-api-reference)
-10. [Seguridad y Optimizaciones](#-seguridad-y-optimizaciones)
-11. [Troubleshooting](#-troubleshooting)
+1. [Descripción General](#descripción-general)
+2. [Características Principales](#características-principales)
+3. [Arquitectura del Proyecto](#arquitectura-del-proyecto)
+4. [Funcionalidades Implementadas](#funcionalidades-implementadas)
+5. [Stack Tecnológico y Decisiones](#stack-tecnológico-y-decisiones)
+6. [Instalación Detallada](#instalación-detallada)
+7. [Guía de Uso](#guía-de-uso)
+8. [Estructura del Proyecto](#estructura-del-proyecto)
+9. [API Reference](#api-reference)
+10. [Seguridad y Optimizaciones](#seguridad-y-optimizaciones)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
